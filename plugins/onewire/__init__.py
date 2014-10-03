@@ -171,6 +171,8 @@ class OwBase():
     def identify_sensor(self, path):
         try:
             typ = self.read(path + 'type').decode()
+            if typ == 'EDS':
+                typ = self.read(path + 'device_type').decode()
         except Exception:
             return
         addr = path.split("/")[-2]
@@ -220,6 +222,8 @@ class OwBase():
             return {'IA': 'sensed.A', 'IB': 'sensed.B', 'OA': 'PIO.A', 'OB': 'PIO.B'}
         elif typ == 'DS1420':  # Busmaster
             return {'BM': 'Busmaster'}
+        elif typ == 'EDS0065':
+            return {'T': 'EDS0065/temperature', 'H': 'EDS0065/humidity'}
         else:
             logger.info("1-Wire: unknown sensor {0} {1}".format(addr, typ))
             return
