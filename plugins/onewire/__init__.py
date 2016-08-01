@@ -52,7 +52,7 @@ class OwBase():
         self._lock.acquire()
         try:
             self._sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            self._sock.settimeout(2)
+            self._sock.settimeout(8)
             self._sock.connect((self.host, self.port))
         except Exception as e:
             self._connection_attempts -= 1
@@ -372,16 +372,19 @@ class OneWire(OwBase):
     def _sensor_cycle(self):
         if not self.connected:
             return
+        logger.debug("1-Wire: start sensor cycle")
         start = time.time()
         for addr in self._sensors:
             if not self.alive:
                 break
+            logger.debug("1-Wire: processing: {}".format(addr))
             for key in self._sensors[addr]:
                 item = self._sensors[addr][key]['item']
                 path = self._sensors[addr][key]['path']
                 if path is None:
                     logger.info("1-Wire: path not found for {0}".format(item.id()))
                     continue
+                logger.debug("1-Wire: processing: {}, item: {}, path: {}".format(addr, item.id(), path))
                 try:
                     value = float(self.read('/uncached' + path).decode())
                 except Exception:
@@ -390,6 +393,7 @@ class OneWire(OwBase):
                         return
                     else:
                         continue
+                logger.debug("1-Wire: processing: {}, item: {}, path: {}, value: {}".format(addr, item.id(), path, value))
                 if key == 'L':  # light lux conversion
                     if value > 0:
                         value = round(10 ** ((float(value) / 47) * 1000))
@@ -398,7 +402,9 @@ class OneWire(OwBase):
                 if key.startswith('T') and value == '85':
                     logger.info("1-Wire: problem reading {0}. Wiring problem?".format(addr))
                     continue
+                logger.debug("1-Wire: processing: {}, item: {}, commit {} -> {}".format(addr, item.id(), item(), value))
                 item(value, '1-Wire', path)
+                logger.debug("1-Wire: processing: {}, item: {}, after commit {}".format(addr, item.id(), item()))
         cycletime = time.time() - start
         logger.debug("1-Wire: sensor cycle takes {0} seconds".format(cycletime))
 
