@@ -171,7 +171,7 @@ class SmartHome():
         # adding logfile
         try:
             formatter = logging.Formatter(_logformat, _logdate)
-            log_file = logging.handlers.TimedRotatingFileHandler(self._logfile, when='midnight', backupCount=7)
+            log_file = logging.handlers.RotatingFileHandler(self._logfile, maxBytes=1000000, backupCount=10)
             log_file.setLevel(LOGLEVEL)
             log_file.setFormatter(formatter)
             if LOGLEVEL == logging.DEBUG:  # clean log
